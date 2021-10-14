@@ -37,8 +37,8 @@ todavía está en desarrollo.
 
 ## Material
 
-- El código para este curso está [en este repositorio de github](https://github.com/felipegonzalez/intro-ml-em-2021). 
-- [Notas de clase](https://intro-ml-em.netlify.app/index.html).
+- El código para este curso está [en este repositorio de github](https://github.com/felipegonzalez/intro-ml-em-2010-otono). 
+- [Notas de clase](https://intro-ml-em-2021-otono.netlify.app/).
 - Usaremos también Rstudio cloud para hacer prácticas optativas
 
 
