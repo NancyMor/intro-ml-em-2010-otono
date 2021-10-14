@@ -1,4 +1,4 @@
-# Desempeño predictivo: sobreajuste y subajuste
+# Sobreajuste y subajuste
 
 ```{r, include = FALSE}
 library(tidyverse)
@@ -277,15 +277,194 @@ de modelos posible que consideramos.
 - Aumentar el tamaño de muestra de entrenamiento (conseguir más información, $N$ más grande).
 - Penalizar o restringir el proceso de ajuste para prevenir sobreaprendizaje.
 
-En las secciones siguientes, veremos cómo 
-
-- Podemos afinar la complejidad para modelos como
+En las secciones siguientes, veremos cómo podemos afinar la complejidad para modelos como
 regresión lineal y vecinos más cercanos. 
-- Cómo diagnosticar subajuste y sobreajuste.
 
 Finalmente, parte del error de predicción se debe a información que no tenemos disponible
 para hacer nuestras predicciones (aún cuando nuestro ajuste sea perfecto). Si el error
 irreducible es muy grande, entonces no hay manera de afinar o seleccionar modelos para
-obtener desempeño aceptable: por más que intentemos, ninguna metodología o habilidad nos
-va a ayudar a tener buenos resultados. **Tener información apropiada es el primer requisito
+obtener desempeño aceptable: por más que intentemos, ninguna metodología o afinación nos
+va a ayudar a tener buenos resultados. **Tener información apropiada y preprocesarla de 
+manera correcta es el primer requisito
 para tener buen desempeño predictivo**.
+
+## Diagnósticos de sobre y subajuste
+
+Podemos contrastar el error de entrenamiento y el error de prueba para hacer
+un diagnóstico básico de sobre o subajuste. Suponiendo que los datos de prueba
+provienen de la misma distribución que los datos de entrenamiento, y módulo variación muestral:
+
+- (Principalmente Subajuste) Cuando el error de entrenamiento es similar al error de prueba, y el error 
+de entrenamiento es alto, entonces podemos considerar como sesgo el primer problema 
+a resolver.
+- (Principalmente Sobreajuste) Cuando el error de prueba es considerablemente más alto que el error de 
+entrenamiento, pero el error de entrenamiento es satisfactorio, entonces consideramos
+a la varianza como el primer problema a resolver. Decimos que hay una **brecha** prueba-entrenamiento.
+- (Combinación) El error de entrenamiento es relativamente alto, y también existe
+brecha considerable prueba-entrenamiento.
+
+Esto está sujeto a dos consideraciones: si los **datos de prueba son diferentes** a los
+de entrenamiento, entonces las dos reglas de arriba pueden no cumplirse, pues hay un 
+factor extra de error en prueba. Adicionalmente, si **el tamaño de datos de prueba o entrenamiento** es
+chico entonces tanto el error de prueba como nuestra estimación específica de error de prueba es muy variable y
+ es difícil saber cuál de los dos problemas es el más importante.
+
+## Ejemplo: afinando k-vecinos más cercanos
+
+Consideramos qué sucede cuando escogemos
+distintos valores de $k$-vecinos. Valores chicos de $k$ resultan en estimaciones
+más ruidosas (como vimos arriba), pues promediamos pocos valores $y$ para hacer
+predicciones, mientras que valores más grandes de $k$ pueden producir sesgo pues
+quizá promediamos valores poco relevantes que están lejos del lugar donde queremos
+predecir.
+
+En *tidymodels*, podemos indicar que buscamos probar varios valores de algún
+hiperparámetro particular con la función *tune()*:
+
+
+#### Ejemplo {-}
+
+```{r, message = FALSE}
+library(gt)
+auto <- read_csv("./datos/auto.csv")
+datos <- auto[, c('name', 'weight','year', 'mpg', 'displacement')]
+datos <- datos %>% mutate(
+  peso_kg = weight * 0.45359237,
+  rendimiento_kpl = mpg * (1.609344 / 3.78541178), 
+  año = year)
+```
+
+Vamos a separa en muestra de entrenamiento y de prueba estos datos. Podemos
+hacerlo como sigue (30% para entrenamiento aproximadamente en este caso):
+
+```{r, message = FALSE}
+library(tidymodels)
+set.seed(3)
+datos_particion <- initial_split(datos, prop = 0.3, strata = 5)
+datos_entrena <- training(datos_particion)
+datos_prueba <- testing(datos_particion)
+nrow(datos_entrena)
+nrow(datos_prueba)
+```
+
+Vamos a usar año y peso de los coches para predecir su rendimiento:
+
+```{r}
+ggplot(datos_entrena, aes(x = peso_kg, y = rendimiento_kpl, colour = año)) +
+  geom_point()
+```
+
+Construimos nuestra receta,
+donde normalizamos pues usaremos vecinos más cercanos:
+
+```{r}
+receta_vmc <- recipe(rendimiento_kpl ~ peso_kg + año, datos_entrena) |> 
+  step_normalize(all_predictors()) 
+```
+
+
+Probaremos con varios valores para $k$. Para indicar esto, en la construcción
+del modelo indicamos los hiperparámetros que queremos probar usando
+la función *tune*:
+
+```{r}
+modelo_vmc <- nearest_neighbor(neighbors = tune()) |>  
+  set_engine("kknn") |>  
+  set_mode("regression")
+```
+
+Construimos nuestro flujo:
+
+```{r}
+flujo_vecinos <- workflow() |>  
+  add_recipe(receta_vmc) |> 
+  add_model(modelo_vmc)
+flujo_vecinos
+```
+Y ahora definimos qué valores de vecinos queremos probar, por ejemplo
+```{r}
+vecinos_grid <- tibble(neighbors = seq(1, 100))
+#vecinos_params <- parameters(neighbors(range = c(1, 100)))
+#vecinos_grid <- grid_regular(vecinos_params, levels = 100)
+```
+
+
+Ahora usamos la función *tune_grid* para ajustar varios modelos a la vez:
+
+
+```{r, fig.width=4, fig.height=3}
+# con esta línea tune_grid reconoce qué datos usar para entrenar
+# y cuáles para evaluar (que está en datos_particion)
+r_split <- manual_rset(list(datos_particion), "_prueba")
+vecinos_eval_tbl <- tune_grid(flujo_vecinos,
+                            resamples = r_split,
+                            grid = vecinos_grid,
+                            metrics = metric_set(rmse)) 
+res_tbl <- vecinos_eval_tbl %>%
+  unnest(cols = c(.metrics)) %>% 
+  select(id, neighbors, .metric, .estimate)
+res_tbl |> head() |> gt()
+```
+Para entender mejor nuestros diagnósticos, evaluamos también el error
+de entrenamiento:
+
+
+
+
+```{r, fig.width=4, fig.height=3}
+ggplot(res_tbl, aes(x = neighbors, y = .estimate)) +
+  geom_line() + geom_point()
+```
+**Discusión**: ¿por qué crees que el desempeño predictivo tiene
+esta forma? ¿En qué partes parece ser más importante reducir varianza,
+y en cuáles el sesgo es el problema?
+
+Calcularemos también errores de entrenamiento para cada uno de estos modelos. Como en realidad el error de entrenamiento **no** se usa para seleccionar modelos, es necesario escribir algo de código:
+
+```{r}
+datos_1 <- bind_rows(
+  datos_entrena |> mutate(id = row_number()), 
+  datos_entrena |> mutate(id = nrow(datos_entrena) + row_number()))
+indices_1 <- 1:nrow(datos_entrena)
+indices_2 <- nrow(datos_entrena) + indices_1
+part_1 <- make_splits(list("analysis" = indices_1, "assessment" = indices_2),
+                      datos_1)
+entrena_split <- manual_rset(list(part_1), "entrena")
+vecinos_entrena_tbl <- tune_grid(flujo_vecinos,
+                            resamples = entrena_split,
+                            grid = vecinos_grid,
+                            metrics = metric_set(rmse)) 
+res_entrena_tbl <- vecinos_entrena_tbl %>%
+  unnest(cols = c(.metrics)) %>% 
+  select(id, neighbors, .metric, .estimate)
+res_entrena_tbl |> head() |> gt()
+```
+
+```{r, fig.width=4, fig.height=3}
+ggplot(bind_rows(res_tbl, res_entrena_tbl), 
+                 aes(x = neighbors, y = .estimate, group = id, colour = id)) +
+  geom_line() + geom_point()
+```
+
+
+ Podemos visualizar
+nuestro modelo seleccionado y los datos de entrenamiento de la siguiente forma:
+
+```{r, fig.width=5, fig.height=3}
+mejor_rmse <- select_best(vecinos_eval_tbl, metric = "rmse")
+ajuste_1 <- finalize_workflow(flujo_vecinos, mejor_rmse) |> 
+  fit(datos_entrena)
+dat_graf <- tibble(peso_kg = seq(900, 2200, by = 10)) %>% 
+  crossing(tibble(año = c(70, 75, 80)))
+dat_graf <- dat_graf %>% 
+  mutate(pred_1 = predict(ajuste_1, dat_graf) %>% pull(.pred))
+ggplot(datos_entrena, aes(x = peso_kg, group = año, colour = año)) +
+  geom_point(aes(y = rendimiento_kpl), alpha = 0.6) + 
+  geom_line(data = dat_graf, aes(y = pred_1),  size = 1.2)
+```
+
+El método parece funcionar razonablemente bien para este problema simple. Sin 
+embargo, si el espacio de entradas no es de dimensión baja, entonces podemos encontrarnos
+con dificultades.
+
+
