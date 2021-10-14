@@ -42,8 +42,9 @@ de modo que el valor verdadero $y$ puede estar lejos de $\hat{f}(x)$ cuando:
 2. Nuestra función de predicción $\hat{f}$ está lejos de la $f$ del proceso generador
 de datos.
 
-En realidad no podemos hacer mucho acerca del primer problema - excepto  
-buscar más información que podamos incluir en $x$ para ayudarnos a predecir $y$. La segunda
+En cuanto al primer problema, podemos hacer más chico el error irreducible creando
+distintas variables derivadas a partir de las que tenemos, o buscando más información
+relevante para incluir en $x$ que nos ayude a predecir $y$. La segunda
 razón es la que nos interesa más por el momento.
 
 Veamos un ejemplo con datos simulados
