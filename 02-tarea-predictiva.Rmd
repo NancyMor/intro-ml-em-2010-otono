@@ -99,6 +99,7 @@ de predicción $\hat{f}$
 - No tiene sentido usar los datos de prueba para construir la función de predictor: los
 casos de prueba son análogos a las *preguntas de un examen*. Los datos de entrenamiento
 son los casos que "mostramos" al modelo para aprender a contestar esas preguntas
+- El error de entrenamiento está sesgado hacia abajo como estimador del desempeño predictivo.
 ```
 
 ## Ejemplo: Kaggle
