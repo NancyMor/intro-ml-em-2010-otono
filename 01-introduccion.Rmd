@@ -588,3 +588,12 @@ optimizamos para encontrar esta representación compacta, estas
 dimensiones latentes necesariamente capturan patrones generales en los
 datos (cuando éstos existen).
 
+**Nota*: la distinción entre aprendizaje supervisado y no supervisado
+no está tan bien definida. Por ejemplo, la descomposición o valores
+singulares o componentes principales buscan reducir la dimensionalidad
+mediante una aproximación a los datos originales, de modo que se puede
+pensar de forma predictiva. El análisis de conglomerados igualmente
+puede considerarse una técnica de reducción de dimensionalidad (pero
+de casos en lugar de variables) que busca también aproximar los datos originales. Una manera de pensarlo es que generalmente el aprendizaje
+no supervisado son técnicas de aprendizaje supervisado que se concentran
+en reducción de dimensionalidad.
