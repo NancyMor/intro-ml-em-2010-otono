@@ -419,7 +419,7 @@ datos_tbl <- juice(receta_casas_prep)
 ```{r}
 datos_tbl %>%
   mutate(across(where(is.numeric), round, 2)) %>% 
-  DT::datatable()
+  DT::datatable(options = list(scrollX = TRUE))
 ```
 
 Y ahora ajustamos nuestro flujo:
