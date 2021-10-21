@@ -1,4 +1,4 @@
-# Métodos locales y estructura en modelos
+# Metodos locales y estructura en modelos
 
 ## Vecinos más cercanos
 
