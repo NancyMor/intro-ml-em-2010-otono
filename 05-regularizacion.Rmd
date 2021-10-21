@@ -1,4 +1,4 @@
-# Regularización: controlando complejidad
+# Regularizacion: controlando complejidad
 
 ```{r, include = FALSE}
 library(tidyverse)
