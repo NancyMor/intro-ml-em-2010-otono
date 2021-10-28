@@ -27,7 +27,7 @@ final del modelo seleccionado arriba. Es una buena idea
 apartar esta muestra si el proceso de validación incluye muchos métodos
 con varios parámetros afinados (como la $\lambda$ de regresión ridge).
 
-```{r, out.width=450}
+```{r, out.width=650}
 knitr::include_graphics("./figuras/div_muestra.png")
 ```
 
@@ -46,7 +46,7 @@ no ponemos en riesgo la estimación final del error. (Pregunta: ¿por qué
 probar agresivamente buscando mejorar el error de validación podría
 ponder en riesgo la estimación final del error del modelo seleccionado? )
 
-### Validación cruzada
+## Validación cruzada
 
 En muchos casos, no queremos apartar una muestra de validación para seleccionar modelos,
 pues no tenemos muchos datos (al dividir la muestra obtendríamos
@@ -68,7 +68,7 @@ ${\mathcal L}=\{ (x_i,y_i)\}_{i=1}^n$:
 
 $$ {\mathcal L}={\mathcal L}_1\cup {\mathcal L}_2\cup\cdots\cup {\mathcal L}_k.$$
 
-```{r, out.width=320}
+```{r, out.width=550}
 knitr::include_graphics("./figuras/div_muestra_cv.png")
 ```
 
