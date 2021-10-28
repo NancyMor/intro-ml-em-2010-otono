@@ -1,4 +1,4 @@
-# Selección y evaluación de modelos
+# Selección y evaluación de modelos {#selec-eval}
 
 ```{r, include = FALSE}
 library(tidyverse)
