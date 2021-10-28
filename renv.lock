@@ -207,10 +207,10 @@
     },
     "cli": {
       "Package": "cli",
-      "Version": "3.0.1",
+      "Version": "3.1.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "e3ae5d68dea0c55a12ea12a9fda02e61"
+      "Hash": "66a3834e54593c89d8beefb312347e58"
     },
     "clipr": {
       "Package": "clipr",
@@ -417,10 +417,10 @@
     },
     "generics": {
       "Package": "generics",
-      "Version": "0.1.0",
+      "Version": "0.1.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "4d243a9c10b00589889fe32314ffd902"
+      "Hash": "3f6bcfb0ee5d671d9fd1893d2faa79cb"
     },
     "ggplot2": {
       "Package": "ggplot2",
@@ -435,6 +435,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "08ab869f37e6a7741a64ab9069bcb67d"
+    },
+    "glmnet": {
+      "Package": "glmnet",
+      "Version": "4.1-2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "ef1d343eb8c6f1a6341288652bbbed0e"
     },
     "globals": {
       "Package": "globals",
@@ -809,10 +816,10 @@
     },
     "pillar": {
       "Package": "pillar",
-      "Version": "1.6.3",
+      "Version": "1.6.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "3323bc1a0988d63b5c65771ba0d3935d"
+      "Hash": "60200b6aa32314ac457d3efbb5ccbd98"
     },
     "pkgconfig": {
       "Package": "pkgconfig",
@@ -926,6 +933,18 @@
       "Repository": "CRAN",
       "Hash": "443951ef5d9e72a96405cbb0157bb1d4"
     },
+    "recipeselectors": {
+      "Package": "recipeselectors",
+      "Version": "0.0.1",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "recipeselectors",
+      "RemoteUsername": "stevenpawley",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "25ef490949c28e0cc2f3889c0bb1c98562a4265a",
+      "Hash": "e069a6a839eeb71ef6196b14647f0b98"
+    },
     "rematch": {
       "Package": "rematch",
       "Version": "1.0.1",
@@ -970,10 +989,10 @@
     },
     "rlang": {
       "Package": "rlang",
-      "Version": "0.4.11",
+      "Version": "0.4.12",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "515f341d3affe0de9e4a7f762efb0456"
+      "Hash": "0879f5388fe6e4d56d7ef0b7ccb031e5"
     },
     "rmarkdown": {
       "Package": "rmarkdown",
@@ -1037,6 +1056,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "3838071b66e0c566d55cc26bd6e27bf4"
+    },
+    "shape": {
+      "Package": "shape",
+      "Version": "1.4.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "9067f962730f58b14d8ae54ca885509f"
     },
     "skimr": {
       "Package": "skimr",
@@ -1229,10 +1255,10 @@
     },
     "workflows": {
       "Package": "workflows",
-      "Version": "0.2.3",
+      "Version": "0.2.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "425eef24910e9b4d8ac90bf45bd0905d"
+      "Hash": "a087bd9bcc22f572730a8949a2ab4a47"
     },
     "workflowsets": {
       "Package": "workflowsets",
