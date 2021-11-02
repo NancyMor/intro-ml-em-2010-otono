@@ -440,82 +440,6 @@ dat_dev_prueba |> ungroup() |> summarise(dev_prueba = mean(dev))
 ```
 
 
-## Error de clasificación y función de pérdida 0-1
-
-Otra  medida común para medir el error de un clasificador es
-el *error de clasificación*, que también llamamos *probabilidad de clasificación
-incorrecta*, o error bajo pérdida 0-1. 
-
-```{block2, type ='comentario'}
-Si $\hat{g}(x)$ es un clasificador (que puede
-ser construido a partir de probabilidades de clase),
-decimos que su **error de clasificación** es
-$$P(\hat{g}(x)\neq g),$$ donde la probabiidad se calcula
-sobre la conjunta de $(x,g)$.
-```
-
-Aunque esta definición aplica para cualquier clasificador, podemos usarlo
-para clasificadores construidos con probabilidades de clase de la siguiente
-forma:
-
-```{block2, type='comentario'}
-Sean $\hat{p}_g(x)$ probabilidades de clase estimadas. El clasificador asociado
-está dado por
-$$\hat{g} (x) = \arg\max_g \hat{p}_g(x)$$
-Podemos estimar su  error de clasificación $P(\hat{g}(x) \neq g)$ con una muestra
-de prueba
-$${\mathcal T}=\{ (x_0^{(1)},g_0^{(1)}),(x_0^{(2)},g_0^{(2)}), \ldots, (x_0^{(m)}, g_0^{(m)})$$
-mediante
-$$\hat{Err} = \frac{1}{m} \sum_{j=i}^m I(\hat{g}(x_0^{(i)}) \neq g_0^{(i)}),$$
-es decir, la proporción de casos de prueba que son clasificados incorrectamente.
-```
-
-#### Ejemplo {-}
-Veamos cómo se comporta en términos de error de clasificación nuestro último modelo:
-
-```{r}
-dat_dev$hat_g <- predict(ajuste_vmc, dat_ent)
-dat_dev |> mutate(correcto = hat_g == g) |> 
-  ungroup() |> summarise(p_correctos = mean(correcto)) |>
-  mutate(error_clasif = 1 - p_correctos)
-```
-
-Y calculamos el error de clasificación de prueba:
-
-```{r}
-dat_dev_prueba$hat_g <- predict(ajuste_vmc, dat_prueba)
-dat_dev_prueba |> mutate(correcto = hat_g == g) |> 
-  ungroup() |> summarise(p_correctos = mean(correcto)) |>
-  mutate(error_clasif = 1 - p_correctos)
-```
-
-**Observación**: la tasa de correctos, para una gran cantidad de problemas,
-es una medida pobre del desempeño de un modelo.
-Es mejor utilizar medidas que usen de mejor manera las probabilidades estimadas
-por nuestro modelo. Además de la pérdida logarítmica, otra medida útil, por ejemplo, es el 
-*score de Brier*, que quizá es más fácil de entender. En el caso de problemas
-de clasificación binaria (0-1), es score de Brier sobre la muestra $\mathcal L$ es
-
-$$b = \frac{1}{N}\sum_{(x,g) \in \mathcal L} (\hat{p}_1(x) - g)^2,$$
-
-donde $g$ toma los valores 0 o 1.
-
-Estas son algunas razones por las que es mejor trabajar con probabilidades 
-de clase y devianza que solamente
-con clasificadores y error de clasificación:
-
-- Tenemos una medida de qué tan seguros estamos en la clasificación (por ejemplo,
-$p_1 = 0.55$ en vez de $p_1 = 0.995$). 
-- La salida de probabilidades es un insumo más útil para tareas posteriores (por ejemplo,
-si quisiéramos ofrecer las 3 clases más probables en clasificación de imágenes).
-- Muchas veces minimizar el error de clasificación no es de interés para el problema,
-sino identificar casos con probabilidades altas de una clase u otra.
-- Permite hacer selección de modelos de manera más atinada: por ejemplo, dada una
-misma tasa de correctos, preferimos aquellos modelos que lo hacen con probabilidades
-que discriminan más (más altas cuando está en lo correcto y más bajas cuando 
-se equivoca).
-
-
 
 ## Regresión logística
 
@@ -542,7 +466,7 @@ puede interpetarse como una probabilidad $p(x)$. Una de las formas más sencilla
 de resolver este problema es transformar esta expresión para que necesariamente
 esté en $[0,1]$ por medio de una función fija $h$:
 
-$$p_{a}(x) = h(a_0 + a_1 x_1 + a_2 x_2 + \cdots + a_px_p),$$
+$$p_{1}(x) = h(a_0 + a_1 x_1 + a_2 x_2 + \cdots + a_px_p),$$
 donde $h$ debe ser una función que mapea valores reales a valores en $[0,1]$. 
 
 En este punto hay muchas funciones que podríamos usar. Para simplificar la interpretación y uso de este modelo, podemos escoger entre funciones que satisfagan, por ejemplo:
@@ -633,7 +557,7 @@ flujo_ajustado
 ```
 
 
-Ahora calculamos devianza de prueba y error de clasificación:
+Ahora calculamos error logarítmico de prueba:
 
 ```{r}
 preds_prueba <- 
@@ -642,7 +566,9 @@ preds_prueba <-
   bind_cols(diabetes_pr |> select(type))
 preds_prueba
 ```
-
+Nótese que *tidymodels* también da predicciones de clase simples, asignando
+a la clase de máxima probabilidad. Podemos estimar también qué tanto coincide
+esta clasificación con los valores observados (*accuracy*):
 
 ```{r}
 levels(preds_prueba$type)
@@ -652,6 +578,9 @@ metricas(preds_prueba, truth = type, .pred_Yes, estimate = .pred_class,
          event_level = "second")
 ```
 
+**Nota**: concentrarse en predicciones de clase de esta forma generalmente
+no es buena idea al ajustar modelos o tomar decisiones de clasificación. Veremos
+más adelante cómo abordar el problema de tomar la decisión de clasificación.
 
 ## Calibración de probabilidades
 
@@ -662,6 +591,7 @@ de las probabilidades que arroja el modelo.
 Esto quiere decir que si el modelo nos dice que la probabilidad de que la clase 1 es 0.8,
 entonces si tenemos un número grande de estos casos (con probabilidad 0.8), alrededor
 de 80\% de éstos tienen que ser positivos. 
+
 #### Ejemplo {-}
 Podemos checar la calibración de nuestro modelo para el ejemplo de diabetes.
 ```{r}
@@ -718,14 +648,14 @@ usando intervalos bayesianos. Es posible usar intervalos normales o t (usando el
 error estándar), pero estos intervalos tienen cobertura mala para proporciones
 muy chicas o muy grandes (https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval). Nuestro ejemplo es similar a los intervalos de Agresti-Coull.
 
-## Regularización para reg logística
+## Regularización para regresión logística
 
 Podemos usar las mismas ideas regularización para modelos 
 de regresión para respuesta numérica en el caso de regresión logística: la
 función objetivo original es la pérdida logarítmica, a la que podemos agregar una 
 penalización tipo L1 o L2 para controlar varianza. 
 
-### Ejemplo: diabetes
+### Ejemplo: clasificación de textos {-}
 
 En este ejemplo hacemos *análisis de sentimiento*, intentanto
 predecir si reseñas de películas son positivas o negativas
@@ -753,7 +683,7 @@ Por ejemplo, para el texto "Un gato blanco, un gato negro", "un perro juega", "u
 |texto_id | un | gato | negro | blanco | perro | juega |
 -----|------|-------|--------|-------|-------  | ---- |
 | texto_1 | 1  |  1   |   1   |   1    |  0    | 0     |
-| texto_2 | 1  |  0   |  0    | 0      |  1    |  0
+| texto_2 | 1  |  0   |  0    | 0      |  1    |  1
 | texto_3 | 1  |  0   |  0    | 0      |  0    |  1   |
 
 Nótese que la palabra *astronauta* no está en nuestro vocabulario para este ejemplo.
@@ -803,7 +733,7 @@ Particionamos la muestra:
 
 ```{r}
 set.seed(83224)
-polaridad_particion <- initial_split(textos, 0.7)
+polaridad_particion <- initial_split(textos, 0.5)
 textos_ent <- training(polaridad_particion)
 textos_pr <- testing(polaridad_particion)
 nrow(textos_ent)
@@ -817,6 +747,7 @@ Ahora hacemos *feature engineering* y limpieza:
 library(textrecipes)
 receta_polaridad <- recipe(polaridad ~ ., textos_ent) |>
   step_mutate(texto = str_remove_all(texto, "[_()]")) |> 
+  step_mutate(texto = str_remove_all(texto, "\n")) |> 
   step_mutate(texto = str_remove_all(texto, "[0-9]*")) |> 
   step_tokenize(texto) |> # separar por palabras
   step_stopwords(texto) |> 
@@ -899,12 +830,10 @@ preds_reg |>
 El resultado es considerablemente mejor.
 
 
-***Pregunta 2 **: Obtén los coeficientes de los dos modelos que comparaste arriba. Compara los
-coeficientes más negativos y más positivos de cada modelo. ¿Cuáles tienen
-valores más grandes en valor absoluto? ¿Por qué? ¿Tiene sentido cuáles palabras
-tienen coeficiente positivo y cuáles negativo?
+Examinamos ahora cómo son los coeficientes de nuestros modelos. Primero
+extraemos los modelos:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 #por ejemplo:
 coefs_baja <- flujo_textos |> extract_fit_parsnip() |> tidy() 
 coefs_reg <- flujo_textos_reg |> extract_fit_parsnip() |> tidy() 
@@ -914,7 +843,7 @@ coefs_2mod <- bind_rows(coefs_baja, coefs_reg) |>
   pivot_wider(names_from = tipo, values_from = estimate)
 ```
 
-Por ejemplo, contrasta los siguientes dos:
+Por ejemplo, podemos contrastar las palabras con coeficiente más positivo:
 
 ```{r}
 coefs_2mod |>  arrange(desc(coef_reg_baja)) |> select(term, coef_reg_baja) |> 
@@ -936,10 +865,11 @@ construir un clasificador (que toma una decisión de "predicción de clase") es
 cortar a distintos niveles de probabilidad, lo que pretende reflejar qué tanto
 nos importa clasificar correctamente a los casos positivos o exluir a los casos negativos:
 
-```{block2, type="comentario"}
+```{block2, type='comentario'}
 Si tenemos un modelo que estima probablidades de clase (para un problema binario),
 podemos construir distintos clasificadores (decisiones) usando distintos puntos de corte.
 Para cada $0 < \alpha <1$, tenemos un clasificador $\hat{G}_{\alpha}$ dado por:
+  
 - Si $p_1(x) > \alpha$, clasificamos el caso como positivo. En otro caso clasificamos
 como negativo.
 ```
@@ -952,8 +882,10 @@ cumplan $\hat{p}_1(x) > 0.5$, y negativos al resto.
 
 ```{block2, type='comentario'}
 Hay dos tipos de errores en un clasificador binario (positivo - negativo):
+  
 - Falsos positivos (fp): clasificar como positivo a un caso negativo.
 - Falsos negativos (fn): clasificar como negativo a un caso positivo.
+
 A los casos clasificados correctamente les llamamos positivos verdaderos (pv)
 y negativos verdaderos (nv).
 ```
@@ -1067,7 +999,7 @@ preds_prueba <- predict(flujo_ajustado, diabetes_pr, type ='prob') |>
   bind_cols(diabetes_pr)
 # usar punto de corte 0.5
 preds_prueba <- preds_prueba |> 
-  mutate(clase_pred_g = ifelse(preds_prueba$.pred_Yes > 0.5, "pred_Yes", "pred_No")) 
+  mutate(clase_pred_g = ifelse(.pred_Yes > 0.5, "pred_Yes", "pred_No")) 
 # calcular matriz de confusión
 confusion <- preds_prueba |> 
   group_by(type, clase_pred_g) |> 
@@ -1096,7 +1028,7 @@ preds_prueba <- preds_prueba |>
 ## calcular con yardstick
 metricas_1 <- metric_set(accuracy, precision, recall)
 preds_prueba |> 
-  metricas_1(type, estimate = clase_pred)
+  metricas_1(type, estimate = clase_pred, event_level = "second")
 ```
 
 También podemos evaluar con sensibilidad y especificidad:
@@ -1104,7 +1036,7 @@ También podemos evaluar con sensibilidad y especificidad:
 ```{r}
 metricas_2 <- metric_set(accuracy, sens, spec)
 preds_prueba |> 
-  metricas_2(type, estimate = clase_pred)
+  metricas_2(type, estimate = clase_pred, event_level = "second")
 ```
 
 
@@ -1137,7 +1069,7 @@ preds_prueba <- preds_prueba |>
 ## calcular con yardstick
 metricas <- metric_set(accuracy, precision, recall)
 preds_prueba |> 
-  metricas(type, estimate = clase_pred)
+  metricas(type, estimate = clase_pred, event_level = "second")
 ```
 
 La precisión mejora, pero la sensibilidad (recall) se deteriora. Visto desde el punto
@@ -1145,7 +1077,7 @@ de vista de sensiblidad y especificidad:
 
 ```{r}
 preds_prueba |> 
-  metricas_2(type, estimate = clase_pred)
+  metricas_2(type, estimate = clase_pred, event_level = "second")
 ```
 
 - Cuando hacemos más chico $\alpha$, entonces exigimos estar más seguros de que un caso es negativo para clasificarlo como negativo. Esto aumenta la sensibilidad, pero la precisión baja.
@@ -1160,11 +1092,11 @@ preds_prueba <- preds_prueba |>
 ## calcular con yardstick
 metricas <- metric_set(accuracy, precision, recall)
 preds_prueba |> 
-  metricas(type, estimate = clase_pred)
+  metricas(type, estimate = clase_pred, event_level = "second")
 ```
 ```{r}
 preds_prueba |> 
-  metricas_2(type, estimate = clase_pred)
+  metricas_2(type, estimate = clase_pred, event_level = "second")
 ```
 
 ---
@@ -1381,7 +1313,23 @@ para puntos de corte altos.
 
 
 
+## Resumen: análisis de error
 
+Como hemos discutido antes, cómo usar las predicciones puede variar mucho
+dependiendo del problema particular, y usualmente requiere un análisis costo-beneficio
+más completo. Sin embargo, en la práctica, cuando estamos construyendo
+clasificadores, muchas veces no sabemos las aplicaciones particulares de los
+modelos predictivos que estamos construyendo, o no sabemos bien cuál es el
+balance de costos de los distintos tipos de errores. De esta forma:
+
+- Usamos medidas como perdida logarítmica y AUC para construir y seleccionar
+modelos.
+- Mostramos resultados interpretables de cómo se puede decidir la clasificación
+en términos de curvas ROC, curvas precisión-exhaustividad o alguna similar. Este primer
+análisis muchas veces es suficiente para decidir qué tan buenos o aplicables son nuestros
+modelos en distintos escenarios.
+- El análisis completo costo-beneficio puede hacerse posteriormente si es necesario,
+pero requiere general un esfuerzo más grande.
 
 
 
