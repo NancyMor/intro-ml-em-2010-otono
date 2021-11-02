@@ -1,4 +1,4 @@
-# Problemas de clasificación
+# Problemas de clasificación {#clasificacion-1}
 
 ```{r, include = FALSE}
 library(tidyverse)
