@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.1.1",
+    "Version": "4.1.2",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -513,6 +513,13 @@
       "Repository": "CRAN",
       "Hash": "8e54ffecc152da9e1e366ff1a4012bb1"
     },
+    "gganimate": {
+      "Package": "gganimate",
+      "Version": "1.0.7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "729026083340f1076e622886c5b337b7"
+    },
     "ggplot2": {
       "Package": "ggplot2",
       "Version": "3.3.5",
@@ -746,10 +753,10 @@
     },
     "keras": {
       "Package": "keras",
-      "Version": "2.6.1",
+      "Version": "2.7.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "a659af7c469bbe7dacd53936418c9b3c"
+      "Hash": "059e3f0de93c3e9bdb14f740fc482b74"
     },
     "kknn": {
       "Package": "kknn",
@@ -1378,6 +1385,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "3cabba58cec834867411b81e03acfa7b"
+    },
+    "tweenr": {
+      "Package": "tweenr",
+      "Version": "1.0.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "6cc663f970a529dbf776f11d5bcd1a2e"
     },
     "tzdb": {
       "Package": "tzdb",
