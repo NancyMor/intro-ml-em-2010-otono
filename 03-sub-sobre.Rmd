@@ -60,7 +60,7 @@ simular_ejemplo <- function(n, sd = 500){
   tibble(id = 1:n, x = x, y = y)
 }
 datos_entrena <- simular_ejemplo(60)
-datos_f <- tibble(x = seq(0, 20, 0.1)) %>% 
+datos_f <- tibble(x = seq(0, 20, 0.1)) |> 
   mutate(f = ifelse(x < 10, 1000*sqrt(x), 1000*sqrt(10)))
 g_datos <- ggplot(datos_entrena, aes(x = x, y = y)) + 
   geom_point() + 
@@ -99,12 +99,12 @@ Primero veamos qué sucede con regresión lineal y distintas muestras de entrena
 ```{r, message=FALSE}
 library(tidymodels)
 mis_metricas <- metric_set(mae)
-receta_simple <- recipe(y ~ ., data = datos_entrena) %>%
+receta_simple <- recipe(y ~ ., data = datos_entrena) |>
   update_role(id, new_role = "id")
-modelo <- linear_reg() %>% set_engine("lm")
+modelo <- linear_reg() |> set_engine("lm")
 
-flujo_simple <- workflow() %>% 
-  add_recipe(receta_simple) %>% 
+flujo_simple <- workflow() |> 
+  add_recipe(receta_simple) |> 
   add_model(modelo)
 ```
 
@@ -116,12 +116,12 @@ graf_lm_tbl <- map_df(reps, function(rep){
   datos_entrena <- simular_ejemplo(15)
   ajuste <- fit(flujo_simple, datos_entrena)
   datos_x <- tibble(x = seq(0, 20, 0.1), id = NA)
-  preds <- predict(ajuste, datos_x) %>% 
-    bind_cols(datos_x) %>% 
-    mutate(rep = rep) %>%
-    group_by(rep) %>% nest()
-  datos_entrena <- datos_entrena %>% mutate(rep = rep) %>% 
-    group_by(rep) %>% nest()
+  preds <- predict(ajuste, datos_x) |> 
+    bind_cols(datos_x) |> 
+    mutate(rep = rep) |>
+    group_by(rep) |> nest()
+  datos_entrena <- datos_entrena |> mutate(rep = rep) |> 
+    group_by(rep) |> nest()
   left_join(datos_entrena, preds, by = "rep", suffix = c("_entrena", "_ajuste"))
 })
 ```
@@ -129,9 +129,9 @@ graf_lm_tbl <- map_df(reps, function(rep){
 Y graficamos las primeras 9:
 
 ```{r, fig.height=7, fig.width=8}
-ggplot(graf_lm_tbl %>% unnest(cols = data_ajuste) %>% filter(rep < 10)) +
+ggplot(graf_lm_tbl |> unnest(cols = data_ajuste) |> filter(rep < 10)) +
   geom_line(aes(x =x, y = .pred, group = rep), colour = "#E69F00", size = 1.2) + 
-  geom_point(data = graf_lm_tbl %>% unnest(cols = data_entrena) %>% filter(rep < 10), 
+  geom_point(data = graf_lm_tbl |> unnest(cols = data_entrena) |> filter(rep < 10), 
              aes(x = x, y = y)) +
   geom_line(data = datos_f, aes(x = x, y =f), colour = "#56B4E9", size=1.2) +
   facet_wrap(~rep)
@@ -156,10 +156,10 @@ en distintas partes de manera consistente.
 En contraste, veamos qué pasa con un método local:
 
 ```{r}
-modelo <- nearest_neighbor(n = 1) %>% 
-  set_mode("regression") %>% set_engine("kknn")
-flujo_simple <- workflow() %>% 
-  add_recipe(receta_simple) %>% 
+modelo <- nearest_neighbor(n = 1) |> 
+  set_mode("regression") |> set_engine("kknn")
+flujo_simple <- workflow() |> 
+  add_recipe(receta_simple) |> 
   add_model(modelo)
 ```
 
@@ -171,12 +171,12 @@ graf_vmc_tbl <- map_df(reps, function(rep){
   datos_entrena <- simular_ejemplo(15)
   ajuste <- fit(flujo_simple, datos_entrena)
   datos_x <- tibble(x = seq(0, 20, 0.5), id = NA)
-  preds <- predict(ajuste, datos_x) %>% 
-    bind_cols(datos_x) %>% 
-    mutate(rep = rep) %>%
-    group_by(rep) %>% nest()
-  datos_entrena <- datos_entrena %>% mutate(rep = rep) %>% 
-    group_by(rep) %>% nest()
+  preds <- predict(ajuste, datos_x) |> 
+    bind_cols(datos_x) |> 
+    mutate(rep = rep) |>
+    group_by(rep) |> nest()
+  datos_entrena <- datos_entrena |> mutate(rep = rep) |> 
+    group_by(rep) |> nest()
   left_join(datos_entrena, preds, by = "rep", suffix = c("_entrena", "_ajuste"))
 })
 ```
@@ -184,9 +184,9 @@ graf_vmc_tbl <- map_df(reps, function(rep){
 Y graficamos las primeras 20:
 
 ```{r, fig.height=7, fig.width=8}
-ggplot(graf_vmc_tbl %>% unnest(cols = data_ajuste) %>% filter(rep < 10)) +
+ggplot(graf_vmc_tbl |> unnest(cols = data_ajuste) |> filter(rep < 10)) +
   geom_line(aes(x =x, y = .pred, group = rep), colour = "#E69F00", size = 1.2) + 
-  geom_point(data = graf_vmc_tbl %>% unnest(cols = data_entrena) %>% filter(rep < 10), 
+  geom_point(data = graf_vmc_tbl |> unnest(cols = data_entrena) |> filter(rep < 10), 
              aes(x = x, y = y)) +
   geom_line(data = datos_f, aes(x = x, y =f), colour = "#56B4E9", size=1.2) +
   facet_wrap(~rep)
@@ -204,15 +204,15 @@ Finalmente, podemos ver lo que sucede alrededor de $x = 10$ por ejemplo,
 extrayendo predicciones:
 
 ```{r}
-preds_lm <- graf_lm_tbl %>% unnest(cols = data_ajuste) %>% 
-  ungroup() %>% filter(x == 10) %>% mutate(tipo = "lineal")
-preds_vmc <- graf_vmc_tbl %>% unnest(cols = data_ajuste) %>% 
-  ungroup() %>% filter(x == 10) %>% mutate(tipo = "1-vmc")
+preds_lm <- graf_lm_tbl |> unnest(cols = data_ajuste) |> 
+  ungroup() |> filter(x == 10) |> mutate(tipo = "lineal")
+preds_vmc <- graf_vmc_tbl |> unnest(cols = data_ajuste) |> 
+  ungroup() |> filter(x == 10) |> mutate(tipo = "1-vmc")
 preds_2 <- bind_rows(preds_lm, preds_vmc)
 ```
 
 ```{r}
-ggplot(datos_f %>% filter(x > 5, x < 15)) +
+ggplot(datos_f |> filter(x > 5, x < 15)) +
   geom_line(aes(x = x, y = f), colour = "#56B4E9", size = 2) +
   geom_boxplot(data = preds_2, aes(x = x, y = .pred, colour = tipo)) 
 ```
@@ -328,7 +328,7 @@ hiperparámetro particular con la función *tune()*:
 library(gt)
 auto <- read_csv("./datos/auto.csv")
 datos <- auto[, c('name', 'weight','year', 'mpg', 'displacement')]
-datos <- datos %>% mutate(
+datos <- datos |> mutate(
   peso_kg = weight * 0.45359237,
   rendimiento_kpl = mpg * (1.609344 / 3.78541178), 
   año = year)
@@ -400,8 +400,8 @@ vecinos_eval_tbl <- tune_grid(flujo_vecinos,
                             resamples = r_split,
                             grid = vecinos_grid,
                             metrics = metric_set(rmse)) 
-res_tbl <- vecinos_eval_tbl %>%
-  unnest(cols = c(.metrics)) %>% 
+res_tbl <- vecinos_eval_tbl |>
+  unnest(cols = c(.metrics)) |> 
   select(id, neighbors, .metric, .estimate)
 res_tbl |> head() |> gt()
 ```
@@ -434,8 +434,8 @@ vecinos_entrena_tbl <- tune_grid(flujo_vecinos,
                             resamples = entrena_split,
                             grid = vecinos_grid,
                             metrics = metric_set(rmse)) 
-res_entrena_tbl <- vecinos_entrena_tbl %>%
-  unnest(cols = c(.metrics)) %>% 
+res_entrena_tbl <- vecinos_entrena_tbl |>
+  unnest(cols = c(.metrics)) |> 
   select(id, neighbors, .metric, .estimate)
 res_entrena_tbl |> head() |> gt()
 ```
@@ -454,10 +454,10 @@ nuestro modelo seleccionado y los datos de entrenamiento de la siguiente forma:
 mejor_rmse <- select_best(vecinos_eval_tbl, metric = "rmse")
 ajuste_1 <- finalize_workflow(flujo_vecinos, mejor_rmse) |> 
   fit(datos_entrena)
-dat_graf <- tibble(peso_kg = seq(900, 2200, by = 10)) %>% 
+dat_graf <- tibble(peso_kg = seq(900, 2200, by = 10)) |> 
   crossing(tibble(año = c(70, 75, 80)))
-dat_graf <- dat_graf %>% 
-  mutate(pred_1 = predict(ajuste_1, dat_graf) %>% pull(.pred))
+dat_graf <- dat_graf |> 
+  mutate(pred_1 = predict(ajuste_1, dat_graf) |> pull(.pred))
 ggplot(datos_entrena, aes(x = peso_kg, group = año, colour = año)) +
   geom_point(aes(y = rendimiento_kpl), alpha = 0.6) + 
   geom_line(data = dat_graf, aes(y = pred_1),  size = 1.2)
